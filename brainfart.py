@@ -15,6 +15,10 @@ op = {}
 #num = {0,1,2,3,4,5,6,7,8,9}
 sep = {" ","\t","(",")"}
 
+varT ={
+	"int8" : 1,
+	"char" : 1
+}
 
 class Tree(object):
   "Generic tree node."
@@ -108,29 +112,35 @@ def parse(tokenList,i,root):
 	return t
 
 
-fn = "test.BF"
-file = open(fn,'r')
-raw = file.read().splitlines()
-#raw = file.readlines()
-file.close()
+def transpile(AST):
+	return 0
 
-tokenList = tokenize(raw)
+
 #AbstractSyntaxTree
-i = [0]
+#raw = file.readlines()
 #print(tokenList[i[0]])
-AST = parse(tokenList,i,"root")
-
 #print(tokenList)
 #for t in raw:
 #print(raw)
-
 #for t in tokenList:
 #	print(t)
-#
+
 def write(tree,sep):
 	print(sep,tree.name)
 	for c in tree.children:
 		write(c,sep + "  ")
 
+
+fn = "test.BF"
+file = open(fn,'r')
+raw = file.read().splitlines()
+file.close()
+
+tokenList = tokenize(raw)
+i = [0]
+AST = parse(tokenList,i,"root")
+
 write(AST,"")
+
+transpile(AST)
 
