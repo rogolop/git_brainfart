@@ -9,6 +9,7 @@ class TokenT(Enum):
 	sep = 5
 	newline = 6
 
+#tt = {"source", "keyword", "op", "id", "literal","sep", "newline"}
 source = {'+','-','>','<','[',']','.',','}
 keywords = {"shit"}
 op = {}
@@ -60,21 +61,21 @@ def tokenize(raw):
 			elif c == "\\":
 				escape = True
 			elif c in source:
-				tokenList.append((TokenT.source,c))
+				tokenList.append(("source",c))
 			elif token == -1:
 				if c.isnumeric(): # or c == "\"":
-					token = TokenT.literal
+					token = "literal"
 					lexeme += c
 				elif c.isalpha() or c == "_":
-					token = TokenT.id
+					token = "id"
 					lexeme += c
 				elif c in sep:
-					tokenList.append((TokenT.sep,c))
+					tokenList.append(("sep",c))
 			elif c in sep:
 				if lexeme in keywords:
-					token = TokenT.keyword
+					token = "keyword"
 				tokenList.append((token,lexeme))
-				tokenList.append((TokenT.sep,c))
+				tokenList.append(("sep",c))
 				lexeme = ""
 				token = -1
 			else:
@@ -91,7 +92,7 @@ def tokenize(raw):
 			tokenList.append((token,lexeme))
 		lexeme = ""
 		token = -1
-		tokenList.append((TokenT.newline,""))
+		tokenList.append(("newline",""))
 
 	return tokenList
 
@@ -102,7 +103,7 @@ def parse(tokenList,i,root):
 		#print(tokenList[i[0]])
 		if tokenList[i[0]][1] == "(":
 			i[0] += 1
-			t.add_child(parse(tokenList,i,"brackets"))
+			t.add_child(parse(tokenList,i,("brackets","")))
 		elif tokenList[i[0]][1] == ")":
 			break
 		else:
@@ -126,7 +127,7 @@ def transpile(AST):
 #	print(t)
 
 def write(tree,sep):
-	print(sep,tree.name)
+	print("%s%-10s%s"%(sep,tree.name[0],tree.name[1]))
 	for c in tree.children:
 		write(c,sep + "  ")
 
@@ -138,7 +139,7 @@ file.close()
 
 tokenList = tokenize(raw)
 i = [0]
-AST = parse(tokenList,i,"root")
+AST = parse(tokenList,i,("root",""))
 
 write(AST,"")
 
