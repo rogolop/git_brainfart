@@ -132,8 +132,8 @@ def write(tree,sep):
 		write(c,sep + "  ")
 
 
-fn = "test.BF"
-file = open(fn,'r')
+fnIn = "test.BF"
+file = open(fnIn,'r')
 raw = file.read().splitlines()
 file.close()
 
@@ -145,3 +145,6 @@ write(AST,"")
 
 transpile(AST)
 
+fnOut = "out.bf"
+file = open(fnOut, 'w')
+file.close()
