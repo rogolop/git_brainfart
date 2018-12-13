@@ -1,13 +1,13 @@
 from enum import Enum
 
-class TokenT(Enum):
-	source = 0
-	keyword = 1
-	op = 2
-	id = 3
-	literal = 4
-	sep = 5
-	newline = 6
+#class TokenT(Enum):
+#	source = 0
+#	keyword = 1
+#	op = 2
+#	id = 3
+#	literal = 4
+#	sep = 5
+#	newline = 6
 
 #tt = {"source", "keyword", "op", "id", "literal","sep", "newline"}
 source = {'+','-','>','<','[',']','.',','}
