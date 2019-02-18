@@ -174,8 +174,8 @@ def expand_macro(AST,i,nmax,arg1,arg2):
           AST.insert_child(j+k, arg2.children[k])
           nmax += 1
         break
-      elif AST.children[i].name[0] == "brackets":
-        expand_macro(AST.children[i],0,len(AST.children[i].children),arg1,arg2)
+      elif AST.children[j].name[0] == "brackets":
+        expand_macro(AST.children[j],0,len(AST.children[j].children),arg1,arg2)
         n += 1
       else:
         n += 1
@@ -206,9 +206,9 @@ def transpile(AST):
       if AST.children[i].name[0] == "keyword":
         t = AST.children[i].name[1]
         if t == "macro":
-          write(AST,"")
+          #write(AST,"")
           nmax = macro(AST,i,nmax)
-          write(AST,"")
+          #write(AST,"")
           break
         elif t == "do":
           nmax = do(AST,i,nmax)
