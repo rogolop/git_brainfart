@@ -1,15 +1,8 @@
-"Hello world!"
+macro plus (p)
+macro p ((++))
+"macro plus (p)"
 
 do 72 + .>
-do 101 + .>
-do 108 + .>
-do 108 + .>
-do 111 + .>
-do 32 + .>
-do 119 + .>
-do 111 + .>
-do 114 + .>
-do 108 + .>
-do 100 + .>
+do 105 + .>
 do 33 + .>
-do 10 + .
+do 5 plus .

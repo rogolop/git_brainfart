@@ -1,5 +1,4 @@
-from enum import Enum
-
+#from enum import Enum
 #class TokenT(Enum):
 # source = 0
 # keyword = 1
@@ -11,7 +10,7 @@ from enum import Enum
 
 #tt = {"source", "keyword", "op", "id", "literal","sep", "newline"}
 source = {'+','-','>','<','[',']','.',','}
-keywords = {"do","shit"}
+keywords = {"do","macro"}
 op = {}
 #num = {0,1,2,3,4,5,6,7,8,9}
 sep = {" ","\t","(",")"}
@@ -128,23 +127,7 @@ def parse(tokenList,i,root):
   return t
 
 
-def do(AST,i,nmax):
-          next = AST.children[i+1]
-          assert next.name[0] == "literal"
-          assert next.name[1].isdigit()
-          next = int(next.name[1])
-          next2 = AST.children[i+2]
-          AST.remove_child(i) #do
-          AST.remove_child(i) #k times
-          AST.remove_child(i) #this
-          nmax -= 3
-          for j in range(0,next):
-            AST.insert_child(i,next2)
-            nmax += 1
-          return nmax
-
-
-def transpile(AST):
+def remove_spaces(AST):
   nmax = len(AST.children)
   #remove spaces
   n = 0
@@ -156,19 +139,80 @@ def transpile(AST):
         break
       else:
         n += 1
+  return nmax
+
+
+def do(AST,i,nmax):
+  arg1 = AST.children[i+1]
+  arg2 = AST.children[i+2]
+  assert arg1.name[0] == "literal"
+  assert arg1.name[1].isdigit()
+  arg1 = int(arg1.name[1])
+  AST.remove_child(i) #do
+  AST.remove_child(i) #arg1 times
+  AST.remove_child(i) #arg2
+  nmax -= 3
+  for j in range(0,arg1):
+    AST.insert_child(i,arg2)
+    nmax += 1
+  return nmax
+
+
+def bfprint(AST,i,nmax):
+  return nmax
+
+
+def expand_macro(AST,i,nmax,arg1,arg2):
+  n = i
+  while n < nmax:
+    for j in range(n,nmax):
+      #print(AST.children[j].name)
+      if AST.children[j].name == arg1.name:
+        AST.remove_child(j)
+        nmax -= 1
+        for k in range(0, len(arg2.children)):
+          AST.insert_child(j+k, arg2.children[k])
+          nmax += 1
+        break
+      elif AST.children[i].name[0] == "brackets":
+        expand_macro(AST.children[i],0,len(AST.children[i].children),arg1,arg2)
+        n += 1
+      else:
+        n += 1
+  return nmax
+
+def macro(AST,i,nmax):
+  arg1 = AST.children[i+1]
+  arg2 = AST.children[i+2]
+  assert arg1.name[0] == "id"
+  remove_spaces(arg2)
+  AST.remove_child(i) #macro
+  AST.remove_child(i) #name
+  AST.remove_child(i) #content
+  nmax -= 3
+  
+  nmax = expand_macro(AST,i,nmax,arg1,arg2)
+  return nmax
+
+
+
+def transpile(AST):
+  #nmax = len(AST.children)
+  nmax = remove_spaces(AST)
   #expand BF expressions
   n = 0
   while n < nmax:
     for i in range(n, nmax):
       if AST.children[i].name[0] == "keyword":
         t = AST.children[i].name[1]
-        if t == "do":
+        if t == "macro":
+          write(AST,"")
+          nmax = macro(AST,i,nmax)
+          write(AST,"")
+          break
+        elif t == "do":
           nmax = do(AST,i,nmax)
           break
-      #if AST.children[i].name[0] == "brackets":
-      #  AST.remove_child(i)
-      #  nmax -= 1
-      #  break
       else:
         n += 1
   #recurse
@@ -185,8 +229,16 @@ def transpile(AST):
         break
       else:
         n += 1
-  return 0
 
+
+def process(raw):
+  tokenList = tokenize(raw)
+  i = [0] #index "pointer" for position in tokenList to be used and modified in recursive function "parse"
+  AST = parse(tokenList,i,("root",""))
+  #write(AST,"")
+  transpile(AST)
+  #write(AST,"")
+  return AST
 
 #AbstractSyntaxTree
 #raw = file.readlines()
@@ -208,19 +260,11 @@ f = open(fnIn,'r')
 raw = f.read().splitlines()
 f.close()
 
-tokenList = tokenize(raw)
-i = [0]
-AST = parse(tokenList,i,("root",""))
-
-#write(AST,"")
-
-transpile(AST)
-
-#write(AST,"")
+AST = process(raw)
 
 fnOut = "out.bf"
 f = open(fnOut, 'w')
 for i in range(0,len(AST.children)):
   print(AST.children[i].name[1], file=f,end='')
-print('',file=f) #\n
+#print('',file=f) #\n
 f.close()
