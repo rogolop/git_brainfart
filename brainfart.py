@@ -186,6 +186,11 @@ def macro(AST,i,nmax):
   arg2 = AST.children[i+2]
   assert arg1.name[0] == "id"
   remove_spaces(arg2)
+  if arg2.children[0].name[0] == "newline":
+    arg2.remove_child(0)
+  L = len(arg2.children)
+  if arg2.children[L-1].name[0] == "newline":
+    arg2.remove_child(L-1)
   AST.remove_child(i) #macro
   AST.remove_child(i) #name
   AST.remove_child(i) #content

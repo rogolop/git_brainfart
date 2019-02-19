@@ -1,5 +1,7 @@
-"macro plus (p)"
-macro p (++)
+"macro plus (p)
+macro p (
+++
+)
 macro plus (p)
 
 do 72 + .>
