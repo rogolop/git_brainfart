@@ -10,7 +10,7 @@
 
 #tt = {"source", "keyword", "op", "id", "literal","sep", "newline"}
 source = {'+','-','>','<','[',']','.',','}
-keywords = {"do","macro"}
+keywords = {"do","macro","var"}
 op = {}
 #num = {0,1,2,3,4,5,6,7,8,9}
 sep = {" ","\t","(",")"}
@@ -158,10 +158,6 @@ def do(AST,i,nmax):
   return nmax
 
 
-def bfprint(AST,i,nmax):
-  return nmax
-
-
 def expand_macro(AST,i,nmax,arg1,arg2):
   n = i
   while n < nmax:
@@ -181,6 +177,7 @@ def expand_macro(AST,i,nmax,arg1,arg2):
         n += 1
   return nmax
 
+
 def macro(AST,i,nmax):
   arg1 = AST.children[i+1]
   arg2 = AST.children[i+2]
@@ -198,7 +195,6 @@ def macro(AST,i,nmax):
   
   nmax = expand_macro(AST,i,nmax,arg1,arg2)
   return nmax
-
 
 
 def transpile(AST):
@@ -234,6 +230,111 @@ def transpile(AST):
         break
       else:
         n += 1
+  #variables
+  vars = {} #dict
+  n = 0
+  while n < nmax:
+    for i in range(n, nmax):
+      if AST.children[i].name == ("keyword","var"):
+        assert AST.children[i+1].name[0] == "id"
+        vars[AST.children[i+1].name[1]] = 0 #............
+      elif AST.children[i].name[0] == "id":
+        if AST.children[i].name[0] in vars:
+          None
+      else:
+        n += 1
+
+
+#remove superfluous code
+def optimize(AST):
+  nmax = len(AST.children)
+  last = ""
+  pair = last
+  acc = 0 #accumulated ammount
+  at = 0 #none/pm/lr
+  ac = 0 #1st/2nd element of pm/lr
+  pm = ("+","-")
+  lr = (">","<")
+  n = 0
+  someChange = False
+  #AST.add_child(Tree(("control","control")))
+  #nmax += 1
+  while n < nmax:
+    for i in range(n, nmax):
+      name = AST.children[i].name
+      #print(i,n,name,last,acc,end="\n")
+      #if name == ("newline","\n"):
+      #  continue
+      if at != 0 and name[0] == "source" and name[1] in {last,pair}:
+        name = name[1]
+        #print(acc)
+        if name == last:
+          acc += 1
+        elif name == pair:
+          acc -= 1
+      elif at != 0:
+        if acc != i-n:
+          someChange = True
+          #remove
+          print("REMOVING:",i-n)
+          for j in range(0,i-n):
+            AST.remove_child(n)
+          nmax -= i-n
+          #print(acc)
+          if acc != 0:
+            #add last
+            if acc > 0:
+              toAdd = last
+            else:
+              toAdd = pair
+              acc *= -1
+            print("ADDING:",toAdd,acc)
+            for j in range(0,acc):
+              AST.insert_child(n, Tree(("source",toAdd)))
+            nmax += acc
+        #acc = 0
+        n += acc
+        at = 0
+        acc = 0
+        break
+      elif name[0] != "source":
+        n += 1
+      else:
+          name = name[1]
+          last = name
+          #at = 0
+          #ac = 0
+          #n += 1
+          acc = 1
+          #n = i
+          if last in pm:
+            at = 1
+            #acc = 1
+            if name == pm[0]:
+              ac = 0
+            else:
+              ac = 1
+            pair = pm[not ac]
+            print("NEW: pm",last)
+          elif last in lr:
+            at = 2
+            acc = 1
+            if name == lr[0]:
+              ac = 0
+            else:
+              ac = 1
+            pair = lr[not ac]
+            print("NEW: lr",last)
+          else:
+            n += 1
+          #break
+      #else:
+      #  n += 1
+  #print(nmax-len(AST.children))
+  #AST.remove_child(nmax-1)
+  if someChange:
+    print("LOOP")
+    optimize(AST)
 
 
 def process(raw):
@@ -242,7 +343,8 @@ def process(raw):
   AST = parse(tokenList,i,("root",""))
   #write(AST,"")
   transpile(AST)
-  #write(AST,"")
+  write(AST,"")
+  optimize(AST)
   return AST
 
 #AbstractSyntaxTree
