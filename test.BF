@@ -1,4 +1,6 @@
-do 72 + .
-do 72 - do 105 + .
-do 105 - do 33 + .
-do 33 - do 10 + .
+var x
+var y
+macro ten ((do 10 +))
+do 7 ten ++ . [-] ten .
+y x
+> y x > x

@@ -232,18 +232,54 @@ def transpile(AST):
         n += 1
   #variables
   vars = {} #dict
+  notUsed = 0
+  pos = 0
   n = 0
   while n < nmax:
     for i in range(n, nmax):
-      if AST.children[i].name == ("keyword","var"):
+      name = AST.children[i].name
+      #print(pos,name)
+      if name == ("keyword","var"):
         assert AST.children[i+1].name[0] == "id"
-        vars[AST.children[i+1].name[1]] = 0 #............
-      elif AST.children[i].name[0] == "id":
-        if AST.children[i].name[0] in vars:
-          None
+        vars[AST.children[i+1].name[1]] = notUsed
+        notUsed += 1
+        AST.remove_child(i)
+        AST.remove_child(i)
+        nmax -= 2
+        break
+      elif name[0] == "id" and name[1] in vars:
+        AST.remove_child(i)
+        d = vars[name[1]] - pos
+        toAdd = ">"
+        if d < 0:
+          toAdd = "<"
+          d *= -1
+          #print("d")
+        #print(d)
+        for j in range(0,d):
+          AST.insert_child(i, Tree(("source",toAdd)))
+        AST.insert_child(i+d, Tree(("literal",name[1])))
+        #AST.remove_child(i)
+        nmax += d #-1
+        #n += 1
+        break
+      elif name == ("source",">"):
+        pos += 1
+        n += 1
+      elif name == ("source","<"):
+        pos -= 1
+        n += 1
+      elif name == ("keyword","rDisplace"):
+        assert AST.children[i+1].name[0] == "literal"
+        pos += int(AST.children[i+1].name[1])
+        AST.remove_child(i)
+        AST.remove_child(i)
+        nmax -= 2
+        #n += 1
+        break
       else:
         n += 1
-
+  #print(vars)
 
 #remove superfluous code
 def optimize(AST):
@@ -257,14 +293,10 @@ def optimize(AST):
   lr = (">","<")
   n = 0
   someChange = False
-  #AST.add_child(Tree(("control","control")))
-  #nmax += 1
   while n < nmax:
     for i in range(n, nmax):
       name = AST.children[i].name
       #print(i,n,name,last,acc,end="\n")
-      #if name == ("newline","\n"):
-      #  continue
       if at != 0 and name[0] == "source" and name[1] in {last,pair}:
         name = name[1]
         #print(acc)
@@ -276,11 +308,10 @@ def optimize(AST):
         if acc != i-n:
           someChange = True
           #remove
-          print("REMOVING:",i-n)
+          #print("REMOVING:",i-n)
           for j in range(0,i-n):
             AST.remove_child(n)
           nmax -= i-n
-          #print(acc)
           if acc != 0:
             #add last
             if acc > 0:
@@ -288,11 +319,10 @@ def optimize(AST):
             else:
               toAdd = pair
               acc *= -1
-            print("ADDING:",toAdd,acc)
+            #print("ADDING:",toAdd,acc)
             for j in range(0,acc):
               AST.insert_child(n, Tree(("source",toAdd)))
             nmax += acc
-        #acc = 0
         n += acc
         at = 0
         acc = 0
@@ -302,20 +332,15 @@ def optimize(AST):
       else:
           name = name[1]
           last = name
-          #at = 0
-          #ac = 0
-          #n += 1
           acc = 1
-          #n = i
           if last in pm:
             at = 1
-            #acc = 1
             if name == pm[0]:
               ac = 0
             else:
               ac = 1
             pair = pm[not ac]
-            print("NEW: pm",last)
+            #print("NEW: pm",last)
           elif last in lr:
             at = 2
             acc = 1
@@ -324,16 +349,11 @@ def optimize(AST):
             else:
               ac = 1
             pair = lr[not ac]
-            print("NEW: lr",last)
+            #print("NEW: lr",last)
           else:
             n += 1
-          #break
-      #else:
-      #  n += 1
-  #print(nmax-len(AST.children))
-  #AST.remove_child(nmax-1)
   if someChange:
-    print("LOOP")
+    #print("LOOP")
     optimize(AST)
 
 
@@ -343,7 +363,7 @@ def process(raw):
   AST = parse(tokenList,i,("root",""))
   #write(AST,"")
   transpile(AST)
-  write(AST,"")
+  #write(AST,"")
   optimize(AST)
   return AST
 
@@ -375,3 +395,5 @@ for i in range(0,len(AST.children)):
   print(AST.children[i].name[1], file=f,end='')
 #print('',file=f) #\n
 f.close()
+
+
