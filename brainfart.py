@@ -10,7 +10,7 @@
 
 #tt = {"source", "keyword", "op", "id", "literal","sep", "newline"}
 source = {'+','-','>','<','[',']','.',','}
-keywords = {"do","macro","var"}
+keywords = {"do","macro","var","rDisplace","lDisplace"}
 op = {}
 #num = {0,1,2,3,4,5,6,7,8,9}
 sep = {" ","\t","(",")"}
@@ -76,6 +76,15 @@ def tokenize(raw):
       elif inQuotes:
         lexeme += c
       elif c in source:
+        #as in "c in sep"
+        if token != -1:
+          if lexeme in keywords:
+            token = "keyword"
+          tokenList.append((token,lexeme))
+          #tokenList.append(("sep",c)) #not this
+          lexeme = ""
+          token = -1
+        #extra
         tokenList.append(("source",c))
       elif token == -1:
         if c.isnumeric(): #or c=="\"":
@@ -272,6 +281,14 @@ def transpile(AST):
       elif name == ("keyword","rDisplace"):
         assert AST.children[i+1].name[0] == "literal"
         pos += int(AST.children[i+1].name[1])
+        AST.remove_child(i)
+        AST.remove_child(i)
+        nmax -= 2
+        #n += 1
+        break
+      elif name == ("keyword","lDisplace"):
+        assert AST.children[i+1].name[0] == "literal"
+        pos -= int(AST.children[i+1].name[1])
         AST.remove_child(i)
         AST.remove_child(i)
         nmax -= 2
