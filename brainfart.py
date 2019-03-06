@@ -83,11 +83,22 @@ def tokenize(raw):
           if lexeme in keywords:
             token = "keyword"
           tokenList.append((token,lexeme))
-          #tokenList.append(("sep",c)) #not this
+          #tokenList.append(("sep",c)) 
           lexeme = ""
           token = -1
         #extra
         tokenList.append(("source",c))
+      elif c in {"(",")"}:
+        #as in "c in sep"
+        if token != -1:
+          if lexeme in keywords:
+            token = "keyword"
+          tokenList.append((token,lexeme))
+          #tokenList.append(("sep",c)) 
+          lexeme = ""
+          token = -1
+        #extra
+        tokenList.append(("bracket",c))
       elif token == -1:
         if c.isnumeric(): #or c=="\"":
           token = "literal"
@@ -127,10 +138,10 @@ def parse(tokenList,i,root):
   t = Tree(root)
   while i[0] < len(tokenList):
     #print(tokenList[i[0]])
-    if tokenList[i[0]][1] == "(":
+    if tokenList[i[0]] == ("bracket","("):
       i[0] += 1
       t.add_child(parse(tokenList,i,("brackets","")))
-    elif tokenList[i[0]][1] == ")":
+    elif tokenList[i[0]] == ("bracket",")"):
       break
     else:
       t.add_child(Tree(tokenList[i[0]]))
@@ -419,4 +430,3 @@ for i in range(0,len(AST.children)):
   print(AST.children[i].name[1], file=f,end='')
 #print('',file=f) #\n
 f.close()
-
