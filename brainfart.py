@@ -1,3 +1,5 @@
+import sys
+
 #from enum import Enum
 #class TokenT(Enum):
 # source = 0
@@ -374,14 +376,15 @@ def optimize(AST):
     optimize(AST)
 
 
-def process(raw):
+def process(raw,opt):
   tokenList = tokenize(raw)
   i = [0] #index "pointer" for position in tokenList to be used and modified in recursive function "parse"
   AST = parse(tokenList,i,("root",""))
   #write(AST,"")
   transpile(AST)
   #write(AST,"")
-  optimize(AST)
+  if opt:
+    optimize(AST)
   return AST
 
 #AbstractSyntaxTree
@@ -404,7 +407,11 @@ f = open(fnIn,'r')
 raw = f.read().splitlines()
 f.close()
 
-AST = process(raw)
+opt = True
+if len(sys.argv) >= 2 and sys.argv[1] == '-n':
+  opt = False
+
+AST = process(raw,opt)
 
 fnOut = "out.bf"
 f = open(fnOut, 'w')
@@ -412,5 +419,4 @@ for i in range(0,len(AST.children)):
   print(AST.children[i].name[1], file=f,end='')
 #print('',file=f) #\n
 f.close()
-
 
