@@ -12,7 +12,7 @@ import sys
 
 #tt = {"source", "keyword", "op", "id", "literal","sep", "newline"}
 source = {'+','-','>','<','[',']','.',','}
-keywords = {"do","macro","var","rDisplace","lDisplace"}
+keywords = {"do","macro","macro2","var","rDisplace","lDisplace"}
 op = {}
 #num = {0,1,2,3,4,5,6,7,8,9}
 sep = {" ","\t","(",")"}
@@ -180,7 +180,7 @@ def do(AST,i,nmax):
   return nmax
 
 
-def expand_macro(AST,i,nmax,arg1,arg2):
+def expand_macro(AST,i,nmax, arg1,arg2):
   n = i
   while n < nmax:
     for j in range(n,nmax):
@@ -219,6 +219,62 @@ def macro(AST,i,nmax):
   return nmax
 
 
+def expand_macro2(AST,i,nmax, arg1,arg2,arg3):
+  intVars = [k.name for k in arg2.children]
+  #print(type(intVars[0]))
+  n = i
+  while n < nmax:
+    for j in range(n,nmax):
+      name = AST.children[j].name
+      #print(AST.children[j].name)
+      if name == arg1.name:
+        AST.remove_child(j)
+        extTree = AST.children[j]
+        remove_spaces(extTree)
+        extVars = extTree.children #[k.name for k in extTree.children]
+        assert len(extVars) == len(intVars)
+        AST.remove_child(j)
+        nmax -= 2
+        for k in range(0, len(arg3.children)):
+          AST.insert_child(j+k, arg3.children[k])
+          nmax += 1
+          #print(AST.children[j+k].name)
+          if AST.children[j+k].name in intVars:
+            I = intVars.index(AST.children[j+k].name)
+            AST.children[j+k] = extVars[I]
+            #print(I)
+        break
+      elif name[0] == "brackets":
+        expand_macro2(AST.children[j],0,len(AST.children[j].children),arg1,arg2,arg3)
+        n += 1
+      else:
+        n += 1
+  return nmax
+
+
+def macro2(AST,i,nmax):
+  arg1 = AST.children[i+1]
+  arg2 = AST.children[i+2]
+  arg3 = AST.children[i+3]
+  assert arg1.name[0] == "id"
+  remove_spaces(arg2)
+  remove_spaces(arg3)
+  if arg3.children[0].name[0] == "newline":
+    arg3.remove_child(0)
+  L = len(arg3.children)
+  if arg3.children[L-1].name[0] == "newline":
+    arg3.remove_child(L-1)
+  AST.remove_child(i) #macro
+  AST.remove_child(i) #name
+  AST.remove_child(i) #variables
+  AST.remove_child(i) #content
+  nmax -= 4
+  
+  nmax = expand_macro2(AST,i,nmax,arg1,arg2,arg3)
+  return nmax
+
+
+
 def transpile(AST):
   #nmax = len(AST.children)
   nmax = remove_spaces(AST)
@@ -229,8 +285,11 @@ def transpile(AST):
       if AST.children[i].name[0] == "keyword":
         t = AST.children[i].name[1]
         if t == "macro":
-          #write(AST,"")
           nmax = macro(AST,i,nmax)
+          break
+        if t == "macro2":
+          #write(AST,"")
+          nmax = macro2(AST,i,nmax)
           #write(AST,"")
           break
         elif t == "do":
