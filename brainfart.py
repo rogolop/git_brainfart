@@ -12,7 +12,7 @@ import sys
 
 #tt = {"source", "keyword", "op", "id", "literal","sep", "newline"}
 source = {'+','-','>','<','[',']','.',','}
-keywords = {"do","macro","macro2","var","rDisplace","lDisplace"}
+keywords = {"do","macro","macro2","var","rDisplace","lDisplace","expand"}
 op = {}
 #num = {0,1,2,3,4,5,6,7,8,9}
 sep = {" ","\t","(",")"}
@@ -66,7 +66,7 @@ def tokenize(raw):
     escape = False
     inQuotes = False
     for c in line:
-      #print(c)
+      #print(c,end="")
       if escape:
         lexeme += c
         escape = False
@@ -132,6 +132,35 @@ def tokenize(raw):
     tokenList.append(("newline","\n"))
 
   return tokenList
+
+
+def aliases(tokenList):
+  # #expand literal
+  nmax = len(tokenList)
+  n = 0
+  alias = {}
+  while n < nmax:
+    for i in range(n, nmax):
+      if tokenList[i] == ("keyword","alias"):
+        del tokenList[i]
+        nmax -= 1
+        assert tokenList[i][0] == "id"
+        name = tokenList[i][1]
+        del tokenList[i]
+        nmax -= 1
+        assert tokenList[i][0] == "literal"
+        codeStr = tokenList[i][1]
+        codeList = tokenize(codeStr)
+        alias[name] = codeList
+        break
+      elif tokenList[i][0] == "id" and tokenList[i][1] in alias:
+        tokenList[i:i] = alias[tokenList[i][1]
+        del tokenList[i]
+        nmax += len(codeList) -1
+        break
+      else:
+        n += 1
+  None
 
 
 def parse(tokenList,i,root):
@@ -369,6 +398,7 @@ def transpile(AST):
       else:
         n += 1
   #print(vars)
+        
 
 #remove superfluous code
 def optimize(AST):
@@ -448,6 +478,8 @@ def optimize(AST):
 
 def process(raw,opt):
   tokenList = tokenize(raw)
+  aliases(tokenList)
+  [print(i) for i in tokenList]
   i = [0] #index "pointer" for position in tokenList to be used and modified in recursive function "parse"
   AST = parse(tokenList,i,("root",""))
   #write(AST,"")
