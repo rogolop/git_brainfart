@@ -1,4 +1,5 @@
 import sys
+import os
 
 #from enum import Enum
 #class TokenT(Enum):
@@ -490,7 +491,7 @@ def optimize(AST):
     #optimize(AST)
 
 
-def process(raw,opt):
+def process(raw,opt,short):
   #print(raw)
   tokenList = tokenize(raw)
   #[print(i) for i in tokenList]
@@ -503,6 +504,21 @@ def process(raw,opt):
   #write(AST,"")
   if opt:
     optimize(AST)
+  while AST.children[0].name == ("newline","\n"):
+    AST.remove_child(0)
+    if len(AST.children) == 0:
+      break
+  if short:
+    nmax = len(AST.children)-1
+    n = 0
+    while n < nmax:
+      for i in range(n, nmax):
+        if [AST.children[i].name,AST.children[i+1].name] == 2*[("newline","\n")]:
+          AST.remove_child(i)
+          nmax -= 1
+          break
+        else:
+          n += 1
   return AST
 
 #AbstractSyntaxTree
@@ -525,11 +541,23 @@ f = open(fnIn,'r')
 raw = f.read().splitlines()
 f.close()
 
-opt = True
-if len(sys.argv) >= 2 and sys.argv[1] == '-n':
-  opt = False
+fnBase = "base.BF"
+if os.path.isfile(fnBase):
+  f = open(fnBase,'r')
+  base = f.read().splitlines()
+  f.close()
+  raw[0:0] = base
+else:
+  print("base.BF not found")
 
-AST = process(raw,opt)
+opt = True
+short = True
+if '--Nopt' in sys.argv:
+  opt = False
+if '--Nshort' in sys.argv:
+  short = False
+
+AST = process(raw,opt,short)
 
 fnOut = "out.bf"
 f = open(fnOut, 'w')
