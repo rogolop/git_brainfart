@@ -12,7 +12,7 @@ import sys
 
 #tt = {"source", "keyword", "op", "id", "literal","sep", "newline"}
 source = {'+','-','>','<','[',']','.',','}
-keywords = {"do","macro","macro2","var","rDisplace","lDisplace","expand"}
+keywords = {"do","macro","macro2","var","rDisplace","lDisplace","alias"}
 op = {}
 #num = {0,1,2,3,4,5,6,7,8,9}
 sep = {" ","\t","(",")"}
@@ -144,23 +144,35 @@ def aliases(tokenList):
       if tokenList[i] == ("keyword","alias"):
         del tokenList[i]
         nmax -= 1
+        assert tokenList[i] == ("sep"," ")
+        del tokenList[i]
+        nmax -= 1
         assert tokenList[i][0] == "id"
         name = tokenList[i][1]
         del tokenList[i]
         nmax -= 1
+        assert tokenList[i] == ("sep"," ")
+        del tokenList[i]
+        nmax -= 1
         assert tokenList[i][0] == "literal"
         codeStr = tokenList[i][1]
-        codeList = tokenize(codeStr)
+        #print("'%s'"%codeStr)
+        codeList = tokenize([codeStr])
+        assert codeList[-1] == ("newline","\n")
+        del codeList[-1]
+        #print(codeList)
         alias[name] = codeList
+        del tokenList[i]
+        nmax -= 1
         break
       elif tokenList[i][0] == "id" and tokenList[i][1] in alias:
-        tokenList[i:i] = alias[tokenList[i][1]
+        tokenList[i+1:i+1] = alias[tokenList[i][1]]
+        #print(alias[tokenList[i][1]])
+        nmax += len(alias[tokenList[i][1]]) -1
         del tokenList[i]
-        nmax += len(codeList) -1
         break
       else:
         n += 1
-  None
 
 
 def parse(tokenList,i,root):
@@ -403,16 +415,18 @@ def transpile(AST):
 #remove superfluous code
 def optimize(AST):
   nmax = len(AST.children)
-  last = ""
-  pair = last
-  acc = 0 #accumulated ammount
-  at = 0 #none/pm/lr
-  ac = 0 #1st/2nd element of pm/lr
   pm = ("+","-")
   lr = (">","<")
-  n = 0
-  someChange = False
-  while n < nmax:
+  someChange = True
+  while someChange:
+   someChange = False
+   acc = 0 #accumulated ammount
+   at = 0 #none/pm/lr
+   ac = 0 #1st/2nd element of pm/lr
+   last = ""
+   pair = last
+   n = 0
+   while n < nmax:
     for i in range(n, nmax):
       name = AST.children[i].name
       #print(i,n,name,last,acc,end="\n")
@@ -471,15 +485,17 @@ def optimize(AST):
             #print("NEW: lr",last)
           else:
             n += 1
-  if someChange:
+  #if someChange:
     #print("LOOP")
-    optimize(AST)
+    #optimize(AST)
 
 
 def process(raw,opt):
+  #print(raw)
   tokenList = tokenize(raw)
+  #[print(i) for i in tokenList]
   aliases(tokenList)
-  [print(i) for i in tokenList]
+  #[print(i) for i in tokenList]
   i = [0] #index "pointer" for position in tokenList to be used and modified in recursive function "parse"
   AST = parse(tokenList,i,("root",""))
   #write(AST,"")
