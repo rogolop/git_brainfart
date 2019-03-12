@@ -1,0 +1,33 @@
+BF grammar
+
+preference order:
+Escapes \x
+Quotes '/" used as synonyms
+bf +-<>[].,
+Alphanumeric/"_"
+
+In quotes => literal
+Starting with number => literal/keyword
+Starting with letter/"_" => identifier/keyword
+
+do N ITEM
+Literally this
+
+macro NAME ITEM
+Substitute NAME with ITEM when found. 
+
+macro expansion extracts from () and deletes starting/ending newline
+-> avoided doing (())
+
+var NAME maps NAME to the least non-used memory position (so far the compiler knows) 
+var redefines variable if defined again
+
+======================
+base.BF example usage:
+======================
+
+if (x t0 t1(
+  doSth
+else
+  doSthElse
+fi
