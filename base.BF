@@ -22,12 +22,10 @@ y[x+y-]
 temp0[y+temp0-]
 )
 
-macro2 print (x t0 t1) (
-var start
-if (x t0 t1(
-  x.
+macro2 print (z t0 t1) (
+if (z t0 t1(
+  z.
 else
-  x do 10 + . do 10 -
+  z do 10 + . do 10 -
 fi
-start
 )

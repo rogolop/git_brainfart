@@ -201,6 +201,9 @@ def remove_spaces(AST):
         AST.remove_child(i)
         nmax -= 1
         break
+      elif AST.children[i].name[0] == "brackets":
+        remove_spaces(AST.children[i])
+        n += 1
       else:
         n += 1
   return nmax
@@ -261,6 +264,15 @@ def macro(AST,i,nmax):
   return nmax
 
 
+def replaceVars(AST,j,m,intVars,extVars):
+  for k in range(0,m):
+    if AST.children[j+k].name in intVars:
+      I = intVars.index(AST.children[j+k].name)
+      AST.children[j+k] = extVars[I]
+    elif AST.children[j+k].name == ("brackets",""):
+      replaceVars(AST.children[j+k],0,len(AST.children[j+k].children),intVars,extVars)
+
+
 def expand_macro2(AST,i,nmax, arg1,arg2,arg3):
   intVars = [k.name for k in arg2.children]
   #print(type(intVars[0]))
@@ -274,6 +286,8 @@ def expand_macro2(AST,i,nmax, arg1,arg2,arg3):
         extTree = AST.children[j]
         remove_spaces(extTree)
         extVars = extTree.children #[k.name for k in extTree.children]
+        [print(c.name) for c in extVars]
+        print(intVars)
         assert len(extVars) == len(intVars)
         AST.remove_child(j)
         nmax -= 2
@@ -281,9 +295,7 @@ def expand_macro2(AST,i,nmax, arg1,arg2,arg3):
           AST.insert_child(j+k, arg3.children[k])
           nmax += 1
           #print(AST.children[j+k].name)
-          if AST.children[j+k].name in intVars:
-            I = intVars.index(AST.children[j+k].name)
-            AST.children[j+k] = extVars[I]
+        replaceVars(AST,j, len(arg3.children),intVars,extVars)
             #print(I)
         break
       elif name[0] == "brackets":
@@ -306,6 +318,8 @@ def macro2(AST,i,nmax):
   L = len(arg3.children)
   if arg3.children[L-1].name[0] == "newline":
     arg3.remove_child(L-1)
+  #[print(c.name) for c in AST.children[i:]]
+  #write(AST,"")
   AST.remove_child(i) #macro
   AST.remove_child(i) #name
   AST.remove_child(i) #variables
@@ -320,6 +334,7 @@ def macro2(AST,i,nmax):
 def transpile(AST):
   #nmax = len(AST.children)
   nmax = remove_spaces(AST)
+  #write(AST,"")
   #expand BF expressions
   n = 0
   while n < nmax:
@@ -541,21 +556,22 @@ f = open(fnIn,'r')
 raw = f.read().splitlines()
 f.close()
 
-fnBase = "base.BF"
-if os.path.isfile(fnBase):
-  f = open(fnBase,'r')
-  base = f.read().splitlines()
-  f.close()
-  raw[0:0] = base
-else:
-  print("base.BF not found")
-
 opt = True
 short = True
 if '--Nopt' in sys.argv:
   opt = False
 if '--Nshort' in sys.argv:
   short = False
+if '--Nbase' not in sys.argv:
+  fnBase = "base.BF"
+  if os.path.isfile(fnBase):
+    f = open(fnBase,'r')
+    base = f.read().splitlines()
+    f.close()
+    raw[0:0] = base
+  else:
+    print("base.BF not found")
+
 
 AST = process(raw,opt,short)
 
