@@ -265,41 +265,44 @@ def macro(AST,i,nmax):
 
 
 def replaceVars(AST,j,m,intVars,extVars):
-  for k in range(0,m):
-    if AST.children[j+k].name in intVars:
-      I = intVars.index(AST.children[j+k].name)
-      AST.children[j+k] = extVars[I]
-    elif AST.children[j+k].name == ("brackets",""):
-      replaceVars(AST.children[j+k],0,len(AST.children[j+k].children),intVars,extVars)
+  for k in range(j,j+m):
+    if AST.children[k].name in intVars:
+      I = intVars.index(AST.children[k].name)
+      AST.children[k] = extVars[I]
+    elif AST.children[k].name == ("brackets",""):
+      replaceVars(AST.children[k],0,len(AST.children[k].children),intVars,extVars)
 
 
 def expand_macro2(AST,i,nmax, arg1,arg2,arg3):
-  intVars = [k.name for k in arg2.children]
-  #print(type(intVars[0]))
+  intVars = [k.name for k in arg2.children]  # placeholder vars used in arg3
+  # print(type(intVars[0]))
   n = i
   while n < nmax:
     for j in range(n,nmax):
       name = AST.children[j].name
-      #print(AST.children[j].name)
-      if name == arg1.name:
+      # print(AST.children[j].name)
+      if name == arg1.name: #call to expand macro arg1
         AST.remove_child(j)
-        extTree = AST.children[j]
+        nmax -= 1
+        extTree = AST.children[j]  # real vars to substitute placeholders (intVars)
         remove_spaces(extTree)
-        extVars = extTree.children #[k.name for k in extTree.children]
+        extVars = extTree.children
+        # [k.name for k in extTree.children]
+        print("extVars ", end="")
         [print(c.name) for c in extVars]
-        print(intVars)
+        print("intVars", intVars)
         assert len(extVars) == len(intVars)
         AST.remove_child(j)
-        nmax -= 2
+        nmax -= 1
         for k in range(0, len(arg3.children)):
           AST.insert_child(j+k, arg3.children[k])
           nmax += 1
-          #print(AST.children[j+k].name)
-        replaceVars(AST,j, len(arg3.children),intVars,extVars)
-            #print(I)
+          # print(AST.children[j+k].name)
+        replaceVars(AST, j, len(arg3.children), intVars, extVars)
+        # print(I)
         break
       elif name[0] == "brackets":
-        expand_macro2(AST.children[j],0,len(AST.children[j].children),arg1,arg2,arg3)
+        expand_macro2(AST.children[j], 0, len(AST.children[j].children), arg1, arg2, arg3)
         n += 1
       else:
         n += 1
@@ -307,9 +310,9 @@ def expand_macro2(AST,i,nmax, arg1,arg2,arg3):
 
 
 def macro2(AST,i,nmax):
-  arg1 = AST.children[i+1]
-  arg2 = AST.children[i+2]
-  arg3 = AST.children[i+3]
+  arg1 = AST.children[i+1] #macro name
+  arg2 = AST.children[i+2] #placeholder vars
+  arg3 = AST.children[i+3] #code
   assert arg1.name[0] == "id"
   remove_spaces(arg2)
   remove_spaces(arg3)
@@ -327,6 +330,7 @@ def macro2(AST,i,nmax):
   nmax -= 4
   
   nmax = expand_macro2(AST,i,nmax,arg1,arg2,arg3)
+  write(AST,"")
   return nmax
 
 
