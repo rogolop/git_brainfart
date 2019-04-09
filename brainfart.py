@@ -1,5 +1,6 @@
 import sys
 import os
+import copy
 
 #from enum import Enum
 #class TokenT(Enum):
@@ -268,7 +269,7 @@ def replaceVars(AST,j,m,intVars,extVars):
   for k in range(j,j+m):
     if AST.children[k].name in intVars:
       I = intVars.index(AST.children[k].name)
-      AST.children[k] = extVars[I]
+      AST.children[k] = extVars.copy()[I]
     elif AST.children[k].name == ("brackets",""):
       replaceVars(AST.children[k],0,len(AST.children[k].children),intVars,extVars)
 
@@ -282,23 +283,25 @@ def expand_macro2(AST,i,nmax, arg1,arg2,arg3):
       name = AST.children[j].name
       # print(AST.children[j].name)
       if name == arg1.name: #call to expand macro arg1
+        #write(arg3)
         AST.remove_child(j)
         nmax -= 1
         extTree = AST.children[j]  # real vars to substitute placeholders (intVars)
         remove_spaces(extTree)
         extVars = extTree.children
         # [k.name for k in extTree.children]
-        print("extVars ", end="")
-        [print(c.name) for c in extVars]
-        print("intVars", intVars)
+        #print("extVars ", end="")
+        #[print(c.name) for c in extVars]
+        #print("intVars", intVars)
         assert len(extVars) == len(intVars)
         AST.remove_child(j)
         nmax -= 1
-        for k in range(0, len(arg3.children)):
-          AST.insert_child(j+k, arg3.children[k])
+        arg3children = copy.deepcopy(arg3).children
+        for k in range(0, len(arg3children)):
+          AST.insert_child(j+k, arg3children[k])
           nmax += 1
           # print(AST.children[j+k].name)
-        replaceVars(AST, j, len(arg3.children), intVars, extVars)
+        replaceVars(AST, j, len(arg3children), intVars, extVars)
         # print(I)
         break
       elif name[0] == "brackets":
@@ -330,7 +333,7 @@ def macro2(AST,i,nmax):
   nmax -= 4
   
   nmax = expand_macro2(AST,i,nmax,arg1,arg2,arg3)
-  write(AST,"")
+  #write(AST,"")
   return nmax
 
 
@@ -549,7 +552,7 @@ def process(raw,opt,short):
 #for t in tokenList:
 # print(t)
 
-def write(tree,sep):
+def write(tree,sep=""):
   print("%s%-10s%s"%(sep,tree.name[0],tree.name[1]))
   for c in tree.children:
     write(c,sep + "  ")

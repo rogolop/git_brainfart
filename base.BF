@@ -12,7 +12,27 @@ macro2 print (z t0 t1) (
 if (z t0 t1(
   z.
 else
-  z do 10 + . do 10 -
+  z do 32 + . do 32 -
 fi
 )
 
+macro2 assign (x y temp0)(
+temp0[-]
+x[-]
+y[x+temp0+y-]
+temp0[y+temp0-]
+)
+
+macro2 swap (x y temp0)(
+temp0[-]
+x[temp0+x-]
+y[x+y-]
+temp0[y+temp0-]
+)
+
+macro2 newline (t0)(
+t0[-]
+t0 do 10 +
+.
+do 10 -
+)
