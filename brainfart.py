@@ -105,7 +105,7 @@ def tokenize(raw):
         if c.isnumeric(): #or c=="\"":
           token = "literal"
           lexeme += c
-        elif c.isalpha() or c == "_":
+        elif c.isalpha() or c in "=%^~|@#&*_$:;/!·¿¡?º£¢¥€çñäáàèéíïóöòúüßẞ©®™÷¦¬×§¶ÄÁÀªÈÉÍÏÓÖÒÚÜ":
           token = "id"
           lexeme += c
         elif c in sep:

@@ -16,7 +16,7 @@ else
 fi
 )
 
-macro2 assign (x y temp0)(
+macro2 = (x y temp0)(
 temp0[-]
 x[-]
 y[x+temp0+y-]
@@ -36,3 +36,11 @@ t0 do 10 +
 .
 do 10 -
 )
+
+macro2 \+= (x y temp0)(
+temp0[-]
+y[x+temp0+y-]
+temp0[y+temp0-]
+)
+
+
